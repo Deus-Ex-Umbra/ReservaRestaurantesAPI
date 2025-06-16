@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use App\Models\UsuarioRestaurante;
+use App\Models\UsuarioCliente;
+use App\Models\UsuarioAdministrador;
 
 class Usuario extends Authenticatable implements JWTSubject {
     use Notifiable;
@@ -42,5 +45,25 @@ class Usuario extends Authenticatable implements JWTSubject {
             'correo' => $this->correo,
             'rol' => $this->rol,
         ];
+    }
+
+    public function usuarioRestaurante()
+    {
+        return $this->hasOne(UsuarioRestaurante::class, 'id_usuario');
+    }
+    
+    public function usuarioCliente()
+    {
+        return $this->hasOne(UsuarioCliente::class, 'id_usuario');
+    }
+
+    public function usuarioAdministrador()
+    {
+        return $this->hasOne(UsuarioAdministrador::class, 'id_usuario');
+    }
+
+    public function usuarioAsociado()
+    {
+        return $this->usuarioRestaurante()->first() ?: ($this->usuarioCliente()->first() ?: $this->usuarioAdministrador()->first());
     }
 }

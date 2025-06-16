@@ -8,8 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VerificarRol
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, $_usuario, $_rol): Response
     {
+        if ($_usuario->rol !== $_rol) {
+            return response()->json([
+                'error' => 'Acceso denegado. Rol no autorizado.'
+            ], 403);
+        }
         return $next($request);
     }
 }
