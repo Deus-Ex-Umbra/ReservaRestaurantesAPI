@@ -6,15 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * protected $fillable = [
-     *    'id_usuario',
-     *    'nombres',
-     *    'apellidos',
-     *    'telefono',
-     *    'ruta_imagen_administrador',
-     *];
-     */
     public function up(): void
     {
         Schema::create('usuarios_administradores', function (Blueprint $table) {
@@ -31,11 +22,8 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('usuario_administradors');
+        Schema::dropIfExists('usuarios_administradores');
     }
 };

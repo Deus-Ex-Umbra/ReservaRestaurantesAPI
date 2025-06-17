@@ -6,24 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * protected $fillable = [
-     *    'id_usuario',
-     *    'nombres',
-     *    'apellidos',
-     *    'telefono',
-     *    'ruta_imagen_cliente'
-     *];
-     */
     public function up(): void
     {
-        Schema::create('usuario_clientes', function (Blueprint $table) {
+        Schema::create('usuarios_clientes', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_usuario')->unique();
             $table->string('nombres');
             $table->string('apellidos');
             $table->string('telefono')->nullable();
             $table->string('ruta_imagen_cliente')->nullable();
+            $table->string('ruta_imagen_qr')->nullable();
             $table->foreign('id_usuario')
                 ->references('id')
                 ->on('usuarios')
@@ -31,11 +23,8 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('usuario_clientes');
+        Schema::dropIfExists('usuarios_clientes');
     }
 };

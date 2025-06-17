@@ -29,16 +29,28 @@ class UsuarioAdministrador extends Model
 
     public function obtenerImagenBase64()
     {
-        if (!$this->ruta_imagen_cliente) {
+        if (!$this->ruta_imagen_administrador) {
             return null;
         }
 
-        $path = storage_path("app/public/{$this->ruta_imagen_cliente}");
+        $ruta_archivo = storage_path("app/public/{$this->ruta_imagen_administrador}");
 
-        if (!file_exists($path)) {
+        if (!file_exists($ruta_archivo)) {
             return null;
         }
 
-        return base64_encode(file_get_contents($path));
+        return base64_encode(file_get_contents($ruta_archivo));
+    }
+
+    public function normalizarDatos()
+    {
+        return [
+            'id' => $this->id,
+            'nombres' => $this->nombres,
+            'apellidos' => $this->apellidos,
+            'telefono' => $this->telefono,
+            'correo' => $this->usuario->correo ?? '',
+            'rol_numerico' => 1
+        ];
     }
 }
