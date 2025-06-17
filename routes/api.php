@@ -23,7 +23,6 @@ Route::group([
     Route::post('iniciar-sesion', [UsuarioController::class, 'iniciarSesion']);
     Route::group(['middleware' => 'auth:api'], function () {
         Route::get('cerrar-sesion', [UsuarioController::class, 'cerrarSesion']);
-        Route::get('usuario', [UsuarioController::class, 'obtenerUsuarioAutenticado']);
     });
 });
 

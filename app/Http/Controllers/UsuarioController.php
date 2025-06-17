@@ -60,10 +60,6 @@ class UsuarioController extends Controller
         return response()->json(['message' => 'Sesión cerrada exitosamente'], 200);
     }
 
-    public function obtenerUsuarioAutenticado() {
-        return response()->json(auth('api')->user());
-    }
-
     protected function responderConToken($token) {
         return response()->json([
             'access_token' => $token,

@@ -9,15 +9,16 @@ use App\Models\Reserva;
 
 class KMeansRecomendadorController extends Controller
 {
+    // Pesos obtenidos después de entrenar un modelo One vs All
     private $pesos_modelo = [
-        ['comida-tradicional', -0.5, 1.5, -0.2, 0.8, 0.5, 0.3],
-        ['parrilla', 0.2, -0.5, 1.2, -0.3, 0.8, -0.1],
-        ['comida-rapida', 0.8, 0.1, -0.8, 1.2, -0.6, 0.5],
-        ['italiana', -0.3, 0.7, 0.5, 0.2, 1.1, -0.4],
-        ['china', 0.1, -0.8, 0.3, -0.9, 0.2, 1.3],
-        ['internacional', -0.7, 1.1, 0.9, 0.6, -0.3, -0.7],
-        ['postres', 0.6, -0.3, -1.1, 0.8, -0.9, 0.2],
-        ['bebidas', 0.4, -0.6, -0.4, -0.7, 0.4, -0.9]
+        ['comida-tradicional', -7.1649, 2.5152, 2.2121, -2.8266, 2.6713, -2.2663],
+        ['comida-tradicional', -6.4401, 0.1575, -2.958, -1.7565, -2.5468, -3.0919],
+        ['parrilla', -6.705, 1.4072, -3.1445, 2.7064, 3.1858, -1.2736],
+        ['parrilla', -6.8581, -3.523, 3.294, 1.2343, -1.0335, -2.7751],
+        ['postres', -6.3861, 2.5098, 2.8159, 3.0776, -0.4051, 1.3269],
+        ['postres', -7.2881, -1.8589, -2.4916, 2.6711, -2.5548, 2.3933],
+        ['bebidas', -6.3779, 1.5916, 0.5362, -3.3082, -2.2735, 3.1126],
+        ['bebidas', -6.9208, -3.1767, -0.4252, -2.0575, 3.407, 2.3544]
     ];
 
     private $mapa_tipos = [
