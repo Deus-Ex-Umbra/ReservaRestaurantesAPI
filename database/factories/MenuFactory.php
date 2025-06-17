@@ -4,20 +4,14 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Menu>
- */
 class MenuFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'nombre_menu' => 'Menú ' . fake()->word(),
+            'descripcion_menu' => fake()->sentence(),
+            'tipo_menu' => fake()->randomElement(['comida-tradicional', 'parrilla', 'comida-rapida', 'italiana', 'china', 'internacional', 'postres', 'bebidas']),
         ];
     }
 }

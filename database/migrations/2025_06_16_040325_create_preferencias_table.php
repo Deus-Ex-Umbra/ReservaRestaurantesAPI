@@ -22,6 +22,7 @@ return new class extends Migration
                 'bebidas'
             ])->nullable();
             $table->decimal('calificacion_minima_preferencia', 3, 2)->nullable();
+            $table->decimal('precio_maximo_preferencia', 8, 2)->nullable();
             $table->foreign('id_usuario_cliente')
                 ->references('id')
                 ->on('usuarios_clientes')

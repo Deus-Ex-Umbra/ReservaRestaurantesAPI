@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('apellidos');
             $table->string('telefono')->nullable();
             $table->string('ruta_imagen_cliente')->nullable();
-            $table->string('ruta_imagen_qr')->nullable();
             $table->foreign('id_usuario')
                 ->references('id')
                 ->on('usuarios')

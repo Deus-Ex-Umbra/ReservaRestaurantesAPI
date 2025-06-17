@@ -4,20 +4,19 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Preferencia>
- */
 class PreferenciaFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
+        $tipos_restaurante = [
+            'comida-tradicional', 'parrilla', 'comida-rapida', 'italiana',
+            'china', 'internacional', 'postres', 'bebidas'
+        ];
+
         return [
-            //
+            'tipo_restaurante_preferencia' => fake()->randomElement($tipos_restaurante),
+            'calificacion_minima_preferencia' => fake()->randomFloat(1, 3.0, 5.0),
+            'precio_maximo_preferencia' => fake()->randomFloat(2, 50, 400),
         ];
     }
 }

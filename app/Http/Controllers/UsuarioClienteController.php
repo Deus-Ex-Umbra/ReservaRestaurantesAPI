@@ -123,14 +123,7 @@ class UsuarioClienteController extends Controller
                 return response()->json($resultado_recomendaciones, 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'recomendaciones' => $resultado_recomendaciones['recomendaciones'],
-                'tipo_predicho' => $resultado_recomendaciones['tipo_predicho'],
-                'top_5_restaurantes' => $resultado_recomendaciones['top_5_restaurantes'],
-                'restaurantes_tipo_predicho' => $resultado_recomendaciones['restaurantes_tipo_predicho'],
-                'datos_normalizados' => $resultado_recomendaciones['datos_normalizados']
-            ], 200);
+            return response()->json($resultado_recomendaciones, 200);
             
         } catch (\Exception $e) {
             return response()->json([

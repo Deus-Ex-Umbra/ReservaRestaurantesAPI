@@ -35,19 +35,14 @@ Route::group([
         Route::post('crear-usuario', [UsuarioAdministradorController::class, 'crearUsuarioAdministrador']);
         Route::put('actualizar-usuario/{id}', [UsuarioAdministradorController::class, 'actualizarUsuarioAdministrador']);
         Route::get('usuarios/{rol}', [UsuarioAdministradorController::class, 'obtenerUsuariosSegunRol']);
-        Route::get('datos-para-kmeans', [UsuarioAdministradorController::class, 'obtenerDatosParaKMeans']);
+        Route::get('generar-dataset-kmeans', [UsuarioAdministradorController::class, 'generarDatasetKmeans']);
         Route::get('usuario/{id}', [UsuarioAdministradorController::class, 'obtenerUsuarioPorId']);
         Route::delete('eliminar-usuario/{id}', [UsuarioAdministradorController::class, 'eliminarUsuarioPorId']);
-        Route::put('suspender-usuario/{id}', [UsuarioAdministradorController::class, 'suspenderUsuario']);
         
         Route::get('reportes', [ReporteController::class, 'obtenerReportes']);
         Route::get('reportes-pendientes', [ReporteController::class, 'obtenerReportesPendientes']);
         Route::get('reporte/{id}', [ReporteController::class, 'obtenerReportePorId']);
         Route::put('procesar-reporte/{id}', [ReporteController::class, 'procesarReporte']);
-
-        Route::get('kmeans/pesos', [KMeansRecomendadorController::class, 'obtenerPesosModelo']);
-        Route::put('kmeans/actualizar-pesos', [KMeansRecomendadorController::class, 'actualizarPesosModelo']);
-        Route::post('kmeans/simular-prediccion', [KMeansRecomendadorController::class, 'simularPrediccion']);
 });
 
 Route::group([

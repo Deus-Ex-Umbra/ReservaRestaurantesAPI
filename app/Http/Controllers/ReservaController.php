@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Models\Reserva;
 use App\Models\Mesa;
+use App\Models\Plato;
 use App\Models\UsuarioCliente;
 use App\Models\UsuarioRestaurante;
-use App\Http\Controllers\ImagenHelperController;
 use Carbon\Carbon;
 
 class ReservaController extends Controller
@@ -18,78 +19,88 @@ class ReservaController extends Controller
         $validador = Validator::make($request->all(), [
             'id_usuario_cliente' => 'required|exists:usuarios_clientes,id',
             'id_restaurante' => 'required|exists:usuarios_restaurantes,id',
-            'id_mesa' => 'required|exists:mesas,id',
+            'id_mesas' => 'required|array',
+            'id_mesas.*' => 'required|exists:mesas,id',
+            'id_platos' => 'required|array',
+            'id_platos.*' => 'required|exists:platos,id',
             'fecha_reserva' => 'required|date|after_or_equal:today',
             'hora_reserva' => 'required|date_format:H:i',
             'personas_reserva' => 'required|integer|min:1',
             'comentarios_reserva' => 'nullable|string|max:500',
             'telefono_contacto_reserva' => 'nullable|string|max:15',
-            'ruta_imagen_comprobante_reserva' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
         if ($validador->fails()) {
             return response()->json(['error' => $validador->errors()], 422);
         }
 
-        $mesa = Mesa::find($request->id_mesa);
-        
-        if ($mesa->id_restaurante != $request->id_restaurante) {
-            return response()->json(['error' => 'La mesa no pertenece al restaurante especificado'], 400);
+        DB::beginTransaction();
+
+        try {
+            $mesas = Mesa::whereIn('id', $request->id_mesas)->get();
+            $capacidad_total_mesas = 0;
+
+            foreach ($mesas as $mesa) {
+                if ($mesa->id_restaurante != $request->id_restaurante) {
+                    throw new \Exception('La mesa con ID ' . $mesa->id . ' no pertenece al restaurante especificado.');
+                }
+                if (!$mesa->estaDisponible($request->fecha_reserva, $request->hora_reserva)) {
+                    throw new \Exception('La mesa ' . $mesa->numero_mesa . ' ya está reservada para esa fecha y hora.');
+                }
+                $capacidad_total_mesas += $mesa->capacidad_mesa;
+            }
+
+            if ($capacidad_total_mesas < $request->personas_reserva) {
+                throw new \Exception('La capacidad total de las mesas seleccionadas no es suficiente.');
+            }
+
+            $platos = Plato::whereIn('id', $request->id_platos)->get();
+            $precio_total_platos = $platos->sum('precio_plato');
+            $precio_reserva = $precio_total_platos * 0.25;
+
+            $reserva = Reserva::create([
+                'id_usuario_cliente' => $request->id_usuario_cliente,
+                'id_restaurante' => $request->id_restaurante,
+                'fecha_reserva' => $request->fecha_reserva,
+                'hora_reserva' => $request->hora_reserva,
+                'precio_total' => $precio_total_platos,
+                'precio_reserva' => $precio_reserva,
+                'personas_reserva' => $request->personas_reserva,
+                'comentarios_reserva' => $request->comentarios_reserva,
+                'telefono_contacto_reserva' => $request->telefono_contacto_reserva,
+                'fecha_creacion_reserva' => Carbon::now()
+            ]);
+
+            $reserva->mesas()->attach($request->id_mesas);
+            $reserva->platos()->attach($request->id_platos);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Pre-reserva creada exitosamente. Por favor, contacta al restaurante para confirmar.', 
+                'reserva_id' => $reserva->id,
+                'detalles_whatsapp' => [
+                    'numero_reserva' => $reserva->id,
+                    'precio_total' => $precio_total_platos,
+                    'monto_adelanto' => $precio_reserva,
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 400);
         }
-
-        if ($mesa->capacidad_mesa < $request->personas_reserva) {
-            return response()->json(['error' => 'La mesa no tiene capacidad suficiente'], 400);
-        }
-
-        $reserva_existente = Reserva::where('id_mesa', $request->id_mesa)
-            ->where('fecha_reserva', $request->fecha_reserva)
-            ->where('hora_reserva', $request->hora_reserva)
-            ->whereIn('estado_reserva', ['pendiente', 'aceptada'])
-            ->first();
-
-        if ($reserva_existente) {
-            return response()->json(['error' => 'La mesa ya está reservada para esa fecha y hora'], 400);
-        }
-
-        $precio_reserva = $mesa->precio_mesa * 0.10;
-
-        $reserva = Reserva::create([
-            'id_usuario_cliente' => $request->id_usuario_cliente,
-            'id_restaurante' => $request->id_restaurante,
-            'id_mesa' => $request->id_mesa,
-            'fecha_reserva' => $request->fecha_reserva,
-            'hora_reserva' => $request->hora_reserva,
-            'precio_reserva' => $precio_reserva,
-            'personas_reserva' => $request->personas_reserva,
-            'comentarios_reserva' => $request->comentarios_reserva,
-            'telefono_contacto_reserva' => $request->telefono_contacto_reserva,
-            'fecha_creacion_reserva' => Carbon::now()
-        ]);
-
-        ImagenHelperController::procesarImagenParaModelo(
-            $request, 
-            $reserva, 
-            'ruta_imagen_comprobante_reserva', 
-            'ruta_imagen_comprobante_reserva', 
-            'comprobantes_reservas'
-        );
-
-        return response()->json([
-            'message' => 'Reserva creada exitosamente', 
-            'reserva' => $reserva
-        ], 201);
     }
 
     public static function obtenerReservasPorCliente($id_usuario_cliente)
     {
-        $reservas = Reserva::with(['restaurante', 'mesa', 'calificacion'])
+        $reservas = Reserva::with(['restaurante', 'mesas', 'platos', 'calificacion'])
             ->where('id_usuario_cliente', $id_usuario_cliente)
             ->orderBy('fecha_reserva', 'desc')
             ->orderBy('hora_reserva', 'desc')
             ->get();
 
         foreach ($reservas as $reserva) {
-            $reserva->comprobante_base64 = $reserva->obtenerComprobanteBase64();
             $reserva->puede_calificar = $reserva->puedeCalificar() && !$reserva->yaFueCalificada();
         }
 
@@ -98,15 +109,11 @@ class ReservaController extends Controller
 
     public static function obtenerReservasPorRestaurante($id_restaurante)
     {
-        $reservas = Reserva::with(['usuarioCliente.usuario', 'mesa'])
+        $reservas = Reserva::with(['usuarioCliente.usuario', 'mesas', 'platos'])
             ->where('id_restaurante', $id_restaurante)
             ->orderBy('fecha_reserva', 'desc')
             ->orderBy('hora_reserva', 'desc')
             ->get();
-
-        foreach ($reservas as $reserva) {
-            $reserva->comprobante_base64 = $reserva->obtenerComprobanteBase64();
-        }
 
         return response()->json(['reservas' => $reservas], 200);
     }
@@ -131,8 +138,9 @@ class ReservaController extends Controller
             return response()->json(['error' => 'Esta reserva ya fue procesada'], 400);
         }
 
-        $usuario_restaurante = auth('api')->user();
-        if ($reserva->restaurante->id_usuario != $usuario_restaurante->id) {
+        $usuario_autenticado = auth('api')->user();
+        $restaurante = UsuarioRestaurante::where('id_usuario', $usuario_autenticado->id)->first();
+        if ($reserva->id_restaurante != $restaurante->id) {
             return response()->json(['error' => 'No puedes procesar una reserva que no es de tu restaurante'], 403);
         }
 
@@ -157,8 +165,10 @@ class ReservaController extends Controller
             return response()->json(['error' => 'Reserva no encontrada'], 404);
         }
 
-        $usuario_cliente = auth('api')->user();
-        if ($reserva->usuarioCliente->id_usuario != $usuario_cliente->id) {
+        $usuario_autenticado = auth('api')->user();
+        $cliente = UsuarioCliente::where('id_usuario', $usuario_autenticado->id)->first();
+        
+        if ($reserva->id_usuario_cliente != $cliente->id) {
             return response()->json(['error' => 'No puedes cancelar una reserva que no es tuya'], 403);
         }
 
@@ -205,7 +215,7 @@ class ReservaController extends Controller
             return response()->json(['error' => $validador->errors()], 422);
         }
 
-        $reservas = Reserva::with(['usuarioCliente.usuario', 'mesa'])
+        $reservas = Reserva::with(['usuarioCliente.usuario', 'mesas', 'platos'])
             ->where('id_restaurante', $id_restaurante)
             ->where('fecha_reserva', $request->fecha)
             ->orderBy('hora_reserva', 'asc')

@@ -21,15 +21,14 @@ class UsuarioRestauranteController extends Controller
             'horario_cierre' => 'required|date_format:H:i',
             'tipo_restaurante' => 'required|in:comida-tradicional,parrilla,comida-rapida,italiana,china,internacional,postres,bebidas',
             'calificacion' => 'nullable|numeric|min:0|max:5',
-            'ruta_imagen_restaurante' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'ruta_qr_pago' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+            'ruta_imagen_restaurante' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
         if ($validador->fails()) {
             return response()->json(['error' => $validador->errors()], 422);
         }
 
-        $usuario_restaurante = UsuarioRestaurante::create($request->except(['ruta_imagen_restaurante', 'ruta_qr_pago']));
+        $usuario_restaurante = UsuarioRestaurante::create($request->except(['ruta_imagen_restaurante']));
 
         ImagenHelperController::procesarImagenParaModelo(
             $request, 
@@ -39,14 +38,6 @@ class UsuarioRestauranteController extends Controller
             'imagenes_restaurantes'
         );
 
-        ImagenHelperController::procesarImagenParaModelo(
-            $request, 
-            $usuario_restaurante, 
-            'ruta_qr_pago', 
-            'ruta_qr_pago', 
-            'qr_pagos'
-        );
-
         return response()->json(['message' => 'Usuario restaurante creado exitosamente', 'usuario_restaurante' => $usuario_restaurante], 201);
     }
 
@@ -54,7 +45,6 @@ class UsuarioRestauranteController extends Controller
         $usuarios_restaurantes = UsuarioRestaurante::with('usuario')->get();
         foreach ($usuarios_restaurantes as $usuario_restaurante) {
             $usuario_restaurante->imagen_base64 = $usuario_restaurante->obtenerImagenBase64();
-            $usuario_restaurante->qr_pago_base64 = $usuario_restaurante->obtenerQrPagoBase64();
         }
         
         return response()->json(['usuarios_restaurantes' => $usuarios_restaurantes], 200);
@@ -69,8 +59,6 @@ class UsuarioRestauranteController extends Controller
         }
         
         $usuario_restaurante->imagen_base64 = $usuario_restaurante->obtenerImagenBase64();
-        $usuario_restaurante->qr_pago_base64 = $usuario_restaurante->obtenerQrPagoBase64();
-        $usuario_restaurante->datos_normalizados = $usuario_restaurante->normalizarDatos();
         
         return response()->json(['usuario_restaurante' => $usuario_restaurante], 200);
     }
@@ -85,8 +73,7 @@ class UsuarioRestauranteController extends Controller
             'horario_cierre' => 'sometimes|required|date_format:H:i',
             'tipo_restaurante' => 'sometimes|required|in:comida-tradicional,parrilla,comida-rapida,italiana,china,internacional,postres,bebidas',
             'calificacion' => 'nullable|numeric|min:0|max:5',
-            'ruta_imagen_restaurante' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'ruta_qr_pago' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+            'ruta_imagen_restaurante' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
         if ($validador->fails()) {
@@ -98,7 +85,7 @@ class UsuarioRestauranteController extends Controller
             return response()->json(['error' => 'Usuario restaurante no encontrado'], 404);
         }
 
-        $usuario_restaurante->fill($request->except(['ruta_imagen_restaurante', 'ruta_qr_pago']));
+        $usuario_restaurante->fill($request->except(['ruta_imagen_restaurante']));
         $usuario_restaurante->save();
 
         ImagenHelperController::procesarImagenParaModelo(
@@ -107,14 +94,6 @@ class UsuarioRestauranteController extends Controller
             'ruta_imagen_restaurante', 
             'ruta_imagen_restaurante', 
             'imagenes_restaurantes'
-        );
-
-        ImagenHelperController::procesarImagenParaModelo(
-            $request, 
-            $usuario_restaurante, 
-            'ruta_qr_pago', 
-            'ruta_qr_pago', 
-            'qr_pagos'
         );
 
         return response()->json(['message' => 'Usuario restaurante actualizado exitosamente', 'usuario_restaurante' => $usuario_restaurante], 200);
@@ -131,10 +110,6 @@ class UsuarioRestauranteController extends Controller
         
         if ($usuario_restaurante->ruta_imagen_restaurante) {
             ImagenHelperController::eliminarImagen($usuario_restaurante->ruta_imagen_restaurante);
-        }
-        
-        if ($usuario_restaurante->ruta_qr_pago) {
-            ImagenHelperController::eliminarImagen($usuario_restaurante->ruta_qr_pago);
         }
         
         $usuario_restaurante->delete();
@@ -155,7 +130,6 @@ class UsuarioRestauranteController extends Controller
 
         foreach ($restaurantes as $restaurante) {
             $restaurante->imagen_base64 = $restaurante->obtenerImagenBase64();
-            $restaurante->qr_pago_base64 = $restaurante->obtenerQrPagoBase64();
         }
 
         return response()->json(['restaurantes' => $restaurantes], 200);
@@ -196,7 +170,6 @@ class UsuarioRestauranteController extends Controller
 
         foreach ($restaurantes as $restaurante) {
             $restaurante->imagen_base64 = $restaurante->obtenerImagenBase64();
-            $restaurante->qr_pago_base64 = $restaurante->obtenerQrPagoBase64();
         }
 
         return response()->json(['restaurantes' => $restaurantes], 200);

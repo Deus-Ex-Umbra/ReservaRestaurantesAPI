@@ -4,20 +4,15 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Plato>
- */
 class PlatoFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'nombre_plato' => fake()->words(2, true),
+            'descripcion_plato' => fake()->paragraph(2),
+            'precio_plato' => fake()->randomFloat(2, 20, 150),
+            'disponible' => true,
         ];
     }
 }

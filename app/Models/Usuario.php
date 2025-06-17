@@ -8,9 +8,11 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Models\UsuarioRestaurante;
 use App\Models\UsuarioCliente;
 use App\Models\UsuarioAdministrador;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Usuario extends Authenticatable implements JWTSubject {
     use Notifiable;
+    use HasFactory;
 
     public $timestamps = false;
 

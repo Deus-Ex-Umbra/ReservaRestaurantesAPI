@@ -3,21 +3,17 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Carbon\Carbon;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Calificacion>
- */
 class CalificacionFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'puntuacion' => fake()->randomFloat(1, 3, 5),
+            'comentario' => fake()->paragraph(),
+            'fecha_calificacion' => Carbon::now()->subDays(rand(1, 365))->toDateString(),
+            'reportada' => false,
         ];
     }
 }

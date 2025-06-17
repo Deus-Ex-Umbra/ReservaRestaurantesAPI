@@ -34,40 +34,38 @@ class UsuarioAdministradorController extends Controller
         return response()->json(['usuarios' => $usuarios], 200);
     }
 
-    public static function obtenerDatosParaKMeans(Request $request)
+    public static function generarDatasetKmeans()
     {
-        $usuarios_clientes = UsuarioCliente::with(['preferencias', 'reservas.restaurante'])
-            ->whereHas('reservas', function($query) {
-                $query->where('estado_reserva', 'completada');
-            })
+        $reservas = Reserva::with(['usuarioCliente.preferencias'])
+            ->where('estado_reserva', 'completada')
             ->get();
 
-        $csv_data = [];
-        $csv_data[] = [
+        $csv_header = [
             'id_usuario_cliente',
-            'tipo_restaurante_preferencia_numerico',
+            'tipo_restaurante_preferencia',
             'calificacion_minima_preferencia',
-            'precio_promedio_reservas',
-            'frecuencia_reservas',
-            'tipo_restaurante_ultima_reserva_numerico',
-            'calificacion_promedio_dada'
+            'precio_maximo_preferencia',
+            'precio_reserva',
+            'cantidad_personas_reserva'
         ];
 
-        foreach ($usuarios_clientes as $cliente) {
-            $datos_normalizados = $cliente->normalizarDatos();
+        $csv_data = [];
+        $csv_data[] = $csv_header;
+
+        foreach ($reservas as $reserva) {
+            $preferencia = $reserva->usuarioCliente->preferencias;
             $csv_data[] = [
-                $datos_normalizados['id_usuario_cliente'],
-                $datos_normalizados['tipo_restaurante_preferencia_numerico'],
-                $datos_normalizados['calificacion_minima_preferencia'],
-                $datos_normalizados['precio_promedio_reservas'],
-                $datos_normalizados['frecuencia_reservas'],
-                $datos_normalizados['tipo_restaurante_ultima_reserva_numerico'],
-                $datos_normalizados['calificacion_promedio_dada']
+                $reserva->id_usuario_cliente,
+                $preferencia->tipo_restaurante_preferencia ?? 'N/A',
+                $preferencia->calificacion_minima_preferencia ?? 'N/A',
+                $preferencia->precio_maximo_preferencia ?? 'N/A',
+                $reserva->precio_reserva,
+                $reserva->personas_reserva
             ];
         }
 
-        $nombre_archivo = 'datos_kmeans_' . date('Y_m_d_H_i_s') . '.csv';
-        $ruta_archivo = storage_path('app/public/' . $nombre_archivo);
+        $nombre_archivo = 'datos_kmeans.csv';
+        $ruta_archivo = public_path($nombre_archivo);
 
         $file = fopen($ruta_archivo, 'w');
         foreach ($csv_data as $row) {
@@ -184,42 +182,17 @@ class UsuarioAdministradorController extends Controller
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        switch ($usuario->rol) {
-            case 'administrador':
-                $usuario_detalle = UsuarioAdministrador::find($id);
-                break;
-            case 'cliente':
-                $usuario_detalle = UsuarioCliente::find($id);
-                break;
-            case 'restaurante':
-                $usuario_detalle = UsuarioRestaurante::find($id);
-                break;
-            default:
-                return response()->json(['error' => 'Rol no válido'], 400);
+        $usuario_asociado = $usuario->usuarioAsociado();
+
+        if ($usuario_asociado) {
+            $usuario_asociado->delete();
         }
 
-        if ($usuario_detalle) {
-            $usuario_detalle->delete();
-        }
         $usuario->delete();
         return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
     }
 
     public static function crearUsuarioCliente(Request $request) {
         return UsuarioClienteController::crearUsuario($request);
-    }
-
-    public static function suspenderUsuario($id)
-    {
-        $usuario = Usuario::find($id);
-        if (!$usuario) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
-        }
-
-        if ($usuario->rol === 'administrador') {
-            return response()->json(['error' => 'No se puede suspender a un administrador'], 403);
-        }
-
-        return response()->json(['message' => 'Funcionalidad de suspensión pendiente de implementación'], 200);
     }
 }

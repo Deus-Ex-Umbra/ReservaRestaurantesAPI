@@ -27,9 +27,9 @@ class Mesa extends Model
         return $this->belongsTo(UsuarioRestaurante::class, 'id_restaurante');
     }
 
-    public function reservasMesas()
+    public function reservas()
     {
-        return $this->hasMany(ReservaMesa::class, 'id_mesa');
+        return $this->belongsToMany(Reserva::class, 'reserva_mesa', 'id_mesa', 'id_reserva');
     }
 
     public function estaDisponible($fecha, $hora)
@@ -38,12 +38,10 @@ class Mesa extends Model
             return false;
         }
 
-        $reserva_existente = $this->reservasMesas()
-            ->whereHas('reserva', function($query) use ($fecha, $hora) {
-                $query->where('fecha_reserva', $fecha)
-                      ->where('hora_reserva', $hora)
-                      ->whereIn('estado_reserva', ['pendiente', 'aceptada']);
-            })
+        $reserva_existente = $this->reservas()
+            ->where('fecha_reserva', $fecha)
+            ->where('hora_reserva', $hora)
+            ->whereIn('estado_reserva', ['pendiente', 'aceptada'])
             ->exists();
 
         return !$reserva_existente;

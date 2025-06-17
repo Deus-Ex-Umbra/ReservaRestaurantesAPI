@@ -28,6 +28,11 @@ class Plato extends Model
         return $this->belongsTo(Menu::class, 'id_menu');
     }
 
+    public function reservas()
+    {
+        return $this->belongsToMany(Reserva::class, 'reserva_plato', 'id_plato', 'id_reserva')->withPivot('cantidad');
+    }
+
     public function obtenerImagenBase64()
     {
         if (!$this->ruta_imagen_plato) {

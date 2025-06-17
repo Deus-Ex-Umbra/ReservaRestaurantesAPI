@@ -29,7 +29,6 @@ return new class extends Migration
             ])->default('comida-rapida');
             $table->decimal('calificacion', 2, 1)->default(0.0);
             $table->string('ruta_imagen_restaurante')->nullable();
-            $table->string('ruta_qr_pago')->nullable();
             $table->foreign('id_usuario')
                 ->references('id')
                 ->on('usuarios')
