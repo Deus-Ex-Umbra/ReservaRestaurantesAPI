@@ -80,6 +80,7 @@ class ReservaController extends Controller
                 'message' => 'Pre-reserva creada exitosamente. Por favor, contacta al restaurante para confirmar.', 
                 'reserva_id' => $reserva->id,
                 'detalles_whatsapp' => [
+                    'numero_restaurante' => $reserva->restaurante->telefono_restaurante,
                     'numero_reserva' => $reserva->id,
                     'precio_total' => $precio_total_platos,
                     'monto_adelanto' => $precio_reserva,
