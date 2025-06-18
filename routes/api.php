@@ -23,6 +23,7 @@ Route::group([
     Route::post('iniciar-sesion', [UsuarioController::class, 'iniciarSesion']);
     Route::group(['middleware' => 'auth:api'], function () {
         Route::get('cerrar-sesion', [UsuarioController::class, 'cerrarSesion']);
+        Route::get('perfil', [UsuarioController::class, 'obtenerPerfilUsuario']);
     });
 });
 
@@ -38,6 +39,14 @@ Route::group([
         Route::get('usuario/{id}', [UsuarioAdministradorController::class, 'obtenerUsuarioPorId']);
         Route::delete('eliminar-usuario/{id}', [UsuarioAdministradorController::class, 'eliminarUsuarioPorId']);
         
+        Route::group(['prefix' => 'buscar'], function () {
+            Route::get('usuarios', [UsuarioAdministradorController::class, 'buscarUsuarios']);
+        });
+        
+        Route::get('todas-reservas', [UsuarioAdministradorController::class, 'obtenerTodasReservas']);
+        Route::get('todos-reportes', [UsuarioAdministradorController::class, 'obtenerTodosReportes']);
+        Route::get('todas-calificaciones', [UsuarioAdministradorController::class, 'obtenerTodasCalificaciones']);
+        
         Route::get('reportes', [ReporteController::class, 'obtenerReportes']);
         Route::get('reportes-pendientes', [ReporteController::class, 'obtenerReportesPendientes']);
         Route::get('reporte/{id}', [ReporteController::class, 'obtenerReportePorId']);
@@ -51,6 +60,12 @@ Route::group([
         Route::post('crear-cliente', [UsuarioClienteController::class, 'crearUsuario']);
         Route::get('{id}', [UsuarioClienteController::class, 'obtenerUsuarioPorId']);
         Route::put('editar/{id}', [UsuarioClienteController::class, 'editarUsuario']);
+        
+        Route::group(['prefix' => 'buscar'], function () {
+            Route::get('restaurantes', [UsuarioClienteController::class, 'buscarRestaurantes']);
+        });
+        
+        Route::get('reservas-por-restaurante/{id_usuario_cliente}', [UsuarioClienteController::class, 'obtenerTodasReservasPorRestaurante']);
         
         Route::post('crear-preferencia', [PreferenciaController::class, 'crearPreferencia']);
         Route::get('preferencia/{id_usuario_cliente}', [PreferenciaController::class, 'obtenerPreferenciaPorUsuarioCliente']);
@@ -80,6 +95,12 @@ Route::group([
         Route::put('editar-usuario/{id}', [UsuarioRestauranteController::class, 'editarUsuario']);
         Route::delete('eliminar-usuario/{id}', [UsuarioRestauranteController::class, 'eliminarUsuarioPorId']);
         
+        Route::group(['prefix' => 'buscar'], function () {
+            Route::get('{id_restaurante}/reservas', [UsuarioRestauranteController::class, 'buscarReservas']);
+        });
+        
+        Route::get('calificaciones-por-cliente/{id_restaurante}', [UsuarioRestauranteController::class, 'obtenerCalificacionesPorCliente']);
+        
         Route::get('{id}/mesas', [MesaController::class, 'obtenerMesasPorRestaurante']);
         Route::post('crear-mesa', [MesaController::class, 'crearMesa']);
         Route::get('mesa/{id}', [MesaController::class, 'obtenerMesaPorId']);
@@ -108,4 +129,15 @@ Route::group([
         Route::get('calificaciones/{id_restaurante}', [CalificacionController::class, 'obtenerCalificacionesPorRestaurante']);
         
         Route::post('crear-reporte', [ReporteController::class, 'crearReporte']);
+});
+
+Route::group(['prefix' => 'publico'], function () {
+    Route::get('restaurantes', [UsuarioRestauranteController::class, 'obtenerUsuarios']);
+    Route::get('restaurante/{id}', [UsuarioRestauranteController::class, 'obtenerUsuarioPorId']);
+    Route::get('restaurantes/tipo/{tipo}', [UsuarioRestauranteController::class, 'obtenerRestaurantesPorTipo']);
+    Route::get('buscar/restaurantes', [UsuarioRestauranteController::class, 'buscarRestaurantes']);
+    Route::get('restaurante/{id_restaurante}/mesas-disponibles', [MesaController::class, 'obtenerMesasDisponibles']);
+    Route::get('tipos-restaurante', [PreferenciaController::class, 'obtenerTiposRestaurante']);
+    Route::get('tipos-menu', [MenuController::class, 'obtenerTiposMenu']);
+    Route::get('menus/tipo/{tipo}', [MenuController::class, 'obtenerMenusPorTipo']);
 });

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\UsuarioRestaurante;
 use App\Models\Usuario;
+use App\Models\Reserva;
+use App\Models\Calificacion;
 use App\Http\Controllers\ImagenHelperController;
 
 class UsuarioRestauranteController extends Controller
@@ -61,6 +63,64 @@ class UsuarioRestauranteController extends Controller
         $usuario_restaurante->imagen_base64 = $usuario_restaurante->obtenerImagenBase64();
         
         return response()->json(['usuario_restaurante' => $usuario_restaurante], 200);
+    }
+
+    public static function buscarReservas(Request $request, $id_restaurante)
+    {
+        $validador = Validator::make($request->all(), [
+            'estado_reserva' => 'nullable|in:pendiente,aceptada,rechazada,completada,cancelada',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
+            'id_usuario_cliente' => 'nullable|exists:usuarios_clientes,id',
+            'personas_reserva' => 'nullable|integer|min:1'
+        ]);
+
+        if ($validador->fails()) {
+            return response()->json(['error' => $validador->errors()], 422);
+        }
+
+        $query = Reserva::with(['usuarioCliente.usuario', 'mesas', 'platos', 'calificacion'])
+            ->where('id_restaurante', $id_restaurante);
+
+        if ($request->estado_reserva) {
+            $query->where('estado_reserva', $request->estado_reserva);
+        }
+
+        if ($request->fecha_inicio) {
+            $query->where('fecha_reserva', '>=', $request->fecha_inicio);
+        }
+
+        if ($request->fecha_fin) {
+            $query->where('fecha_reserva', '<=', $request->fecha_fin);
+        }
+
+        if ($request->id_usuario_cliente) {
+            $query->where('id_usuario_cliente', $request->id_usuario_cliente);
+        }
+
+        if ($request->personas_reserva) {
+            $query->where('personas_reserva', '>=', $request->personas_reserva);
+        }
+
+        $reservas = $query->orderBy('fecha_reserva', 'desc')
+                         ->orderBy('hora_reserva', 'desc')
+                         ->get();
+
+        return response()->json(['reservas' => $reservas], 200);
+    }
+
+    public static function obtenerCalificacionesPorCliente($id_restaurante)
+    {
+        $calificaciones = Calificacion::with(['usuarioCliente.usuario', 'reserva'])
+            ->where('id_restaurante', $id_restaurante)
+            ->where('reportada', false)
+            ->orderBy('id_usuario_cliente')
+            ->orderBy('fecha_calificacion', 'desc')
+            ->get();
+
+        $calificaciones_agrupadas = $calificaciones->groupBy('id_usuario_cliente');
+
+        return response()->json(['calificaciones_por_cliente' => $calificaciones_agrupadas], 200);
     }
 
     public static function editarUsuario(Request $request, $id) {
